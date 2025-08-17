@@ -29,23 +29,17 @@ import java.time.Month
 import java.time.format.TextStyle
 import java.util.Locale
 
-/* ======= DATOS TUYOS ======= */
 private const val FULL_NAME = "Emilio Josue Chen Borrayo"
 private val BIRTHDAY_MONTH = Month.SEPTEMBER
 private const val BIRTHDAY_DAY = 28
-/* =========================== */
 
-// Restaurante favorito
 private const val RESTO_NAME = "Frisco Grill Cayalá"
 private const val RESTO_ADDRESS = "Paseo Cayalá, Zona 16"
 private const val OPEN_HOURS = "12:00PM 10:00PM"
 private const val FOOD_TYPE = "Rápida / Grill"
 private const val PRICE_LEVEL = "QQ"
 
-// Botón “Descargar” → Play Store (WhatsApp de ejemplo)
 private const val TARGET_PACKAGE = "com.whatsapp"
-
-// Coordenadas del restaurante (ajústalas si quieres las exactas)
 private const val RESTO_LAT = 14.6129
 private const val RESTO_LNG = -90.5069
 
@@ -71,11 +65,9 @@ private fun MainScreen() {
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "Actualización disponible",
+                    Text("Actualización disponible",
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
+                        modifier = Modifier.weight(1f))
                     TextButton(onClick = { openPlayStoreOrWeb(context, TARGET_PACKAGE) }) {
                         Text("Descargar")
                     }
@@ -90,17 +82,9 @@ private fun MainScreen() {
                 .padding(16.dp)
         ) {
             val (weekday, dateText) = remember { birthdayForThisYear() }
-            Text(
-                weekday,
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.ExtraBold
-            )
+            Text(weekday, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(4.dp))
-            Text(
-                dateText,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(dateText, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Spacer(Modifier.height(16.dp))
             OutlinedButton(onClick = { /* decorativo */ }, modifier = Modifier.align(Alignment.End)) {
@@ -109,19 +93,14 @@ private fun MainScreen() {
 
             Spacer(Modifier.height(16.dp))
             RestaurantCard(
-                onStart = {
-                    // Toast con tu nombre completo
-                    Toast.makeText(context, FULL_NAME, Toast.LENGTH_SHORT).show()
-                },
+                onStart = { Toast.makeText(context, FULL_NAME, Toast.LENGTH_SHORT).show() },
                 onDetails = {
-                    // “Detalles” como Toast (dos líneas)
-                    val msg = "Tipo de comida: $FOOD_TYPE\n¿Qué tan caro es?: $PRICE_LEVEL"
-                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    val i = Intent(context, DetailsActivity::class.java)
+                        .putExtra("food", FOOD_TYPE)
+                        .putExtra("price", PRICE_LEVEL)
+                    context.startActivity(i)
                 },
-                onDirections = {
-                    // Maps con pin en coordenadas
-                    openMapsWithPin(context, RESTO_LAT, RESTO_LNG, RESTO_NAME)
-                }
+                onDirections = { openMapsWithPin(context, RESTO_LAT, RESTO_LNG, RESTO_NAME) }
             )
         }
     }
@@ -150,9 +129,7 @@ private fun RestaurantCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = onStart, modifier = Modifier.widthIn(min = 160.dp)) {
-                        Text("Iniciar")
-                    }
+                    Button(onClick = onStart, modifier = Modifier.widthIn(min = 160.dp)) { Text("Iniciar") }
                     TextButton(onClick = onDetails) { Text("Detalles") }
                 }
             }
@@ -163,8 +140,7 @@ private fun RestaurantCard(
     }
 }
 
-/* ============== Helpers ============== */
-
+/* Helpers */
 private fun birthdayForThisYear(): Pair<String, String> {
     val locale = Locale("es", "ES")
     val now = LocalDate.now()
@@ -173,34 +149,25 @@ private fun birthdayForThisYear(): Pair<String, String> {
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     val day = date.dayOfMonth.toString()
     val month = date.month.getDisplayName(TextStyle.FULL, locale)
-    val dateText = "$day de $month"
-    return weekday to dateText
+    return weekday to "$day de $month"
 }
 
 private fun openPlayStoreOrWeb(context: Context, packageName: String) {
     try {
         val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
-            .apply {
-                setPackage("com.android.vending")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        context.startActivity(market)
-        return
-    } catch (_: ActivityNotFoundException) { /* fallback */ }
-
-    val web = Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
-    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .apply { setPackage("com.android.vending"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+        context.startActivity(market); return
+    } catch (_: ActivityNotFoundException) { }
+    val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     context.startActivity(web)
 }
 
 private fun openMapsWithPin(context: Context, lat: Double, lng: Double, label: String) {
     val uri = Uri.parse("geo:$lat,$lng?q=$lat,$lng(${Uri.encode(label)})")
     val maps = Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps")
-    try {
-        context.startActivity(maps)
-    } catch (_: ActivityNotFoundException) {
+    try { context.startActivity(maps) }
+    catch (_: ActivityNotFoundException) {
         val web = Uri.parse("https://maps.google.com/?q=$lat,$lng")
         context.startActivity(Intent(Intent.ACTION_VIEW, web))
     }
@@ -208,6 +175,4 @@ private fun openMapsWithPin(context: Context, lat: Double, lng: Double, label: S
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewMain() {
-    Laboratorio5Theme { MainScreen() }
-}
+private fun PreviewMain() { Laboratorio5Theme { MainScreen() } }
