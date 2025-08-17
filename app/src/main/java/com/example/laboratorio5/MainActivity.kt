@@ -31,27 +31,28 @@ import java.util.Locale
 
 /* ======= EDITA SOLO ESTAS CONSTANTES ======= */
 private const val FULL_NAME = "TU NOMBRE COMPLETO"
-private val BIRTHDAY_MONTH = Month.SEPTEMBER   // mes de cumple (ej. SEPTEMBER)
-private const val BIRTHDAY_DAY = 30            // día de cumple
-private const val RESTO_NAME = "Ookii"
-private const val RESTO_ADDRESS = "Plaza 10, 6a avenida zona 10"
-private const val OPEN_HOURS = "8:00AM 7:00PM"
-private const val FOOD_TYPE = "Ramen"
-private const val PRICE_LEVEL = "QQ"           // Barato: Q, Normal: QQ, Caro: QQQ
-private const val TARGET_PACKAGE = "com.whatsapp" // Para el botón Descargar
-private const val RESTO_LAT = 14.603744
-private const val RESTO_LNG = -90.489158
+private val BIRTHDAY_MONTH = Month.SEPTEMBER
+private const val BIRTHDAY_DAY = 30
+
+// Restaurante favorito
+private const val RESTO_NAME = "Frico Grill Cayalá"
+private const val RESTO_ADDRESS = "Paseo Cayalá, Guatemala"
+private const val OPEN_HOURS = "12:00PM 10:00PM"
+private const val FOOD_TYPE = "Rápida / Grill"
+private const val PRICE_LEVEL = "QQ"
+
+// Play Store del botón “Descargar”
+private const val TARGET_PACKAGE = "com.whatsapp"
+
+// Consulta para Google Maps (nombre + lugar)
+private const val MAPS_QUERY = "Frisco Grill Cayalá, Paseo Cayalá"
 /* =========================================== */
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            Laboratorio5Theme {
-                MainScreen()
-            }
-        }
+        setContent { Laboratorio5Theme { MainScreen() } }
     }
 }
 
@@ -74,9 +75,7 @@ private fun MainScreen() {
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    TextButton(onClick = {
-                        openPlayStoreOrWeb(context, TARGET_PACKAGE)
-                    }) {
+                    TextButton(onClick = { openPlayStoreOrWeb(context, TARGET_PACKAGE) }) {
                         Text("Descargar")
                     }
                 }
@@ -89,7 +88,6 @@ private fun MainScreen() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Fecha de cumpleaños de ESTE año
             val (weekday, dateText) = remember { birthdayForThisYear() }
             Text(
                 weekday,
@@ -104,27 +102,20 @@ private fun MainScreen() {
             )
 
             Spacer(Modifier.height(16.dp))
-
-            OutlinedButton(
-                onClick = { /* decorativo */ },
-                modifier = Modifier.align(Alignment.End)
-            ) { Text("Terminar jornada") }
+            OutlinedButton(onClick = { /* opcional */ }, modifier = Modifier.align(Alignment.End)) {
+                Text("Terminar jornada")
+            }
 
             Spacer(Modifier.height(16.dp))
-
             RestaurantCard(
-                onStart = {
-                    Toast.makeText(context, FULL_NAME, Toast.LENGTH_SHORT).show()
-                },
+                onStart = { Toast.makeText(context, FULL_NAME, Toast.LENGTH_SHORT).show() },
                 onDetails = {
                     val i = Intent(context, DetailsActivity::class.java)
                         .putExtra("food", FOOD_TYPE)
                         .putExtra("price", PRICE_LEVEL)
                     context.startActivity(i)
                 },
-                onDirections = {
-                    openMapsWithPin(context, RESTO_LAT, RESTO_LNG, RESTO_NAME)
-                }
+                onDirections = { openMapsWithQuery(context, MAPS_QUERY) }
             )
         }
     }
@@ -159,10 +150,7 @@ private fun RestaurantCard(
                     TextButton(onClick = onDetails) { Text("Detalles") }
                 }
             }
-            IconButton(
-                onClick = onDirections,
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-            ) {
+            IconButton(onClick = onDirections, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)) {
                 Icon(Icons.Filled.Directions, contentDescription = "Directions")
             }
         }
@@ -185,12 +173,11 @@ private fun birthdayForThisYear(): Pair<String, String> {
 
 private fun openPlayStoreOrWeb(context: Context, packageName: String) {
     try {
-        val market = Intent(
-            Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")
-        ).apply {
-            setPackage("com.android.vending")
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
+            .apply {
+                setPackage("com.android.vending")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
         context.startActivity(market)
         return
     } catch (_: ActivityNotFoundException) { /* fallback */ }
@@ -202,16 +189,16 @@ private fun openPlayStoreOrWeb(context: Context, packageName: String) {
     context.startActivity(web)
 }
 
-private fun openMapsWithPin(context: Context, lat: Double, lng: Double, label: String) {
-    val gmm = Intent(
+private fun openMapsWithQuery(context: Context, query: String) {
+    val mapsIntent = Intent(
         Intent.ACTION_VIEW,
-        Uri.parse("geo:0,0?q=$lat,$lng(${Uri.encode(label)})")
+        Uri.parse("geo:0,0?q=${Uri.encode(query)}")
     ).setPackage("com.google.android.apps.maps")
 
     try {
-        context.startActivity(gmm)
+        context.startActivity(mapsIntent)
     } catch (_: ActivityNotFoundException) {
-        val web = Uri.parse("https://maps.google.com/?q=$lat,$lng")
+        val web = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(query)}")
         context.startActivity(Intent(Intent.ACTION_VIEW, web))
     }
 }
