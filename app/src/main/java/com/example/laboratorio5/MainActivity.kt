@@ -29,24 +29,25 @@ import java.time.Month
 import java.time.format.TextStyle
 import java.util.Locale
 
-/* ======= EDITA SOLO ESTAS CONSTANTES ======= */
-private const val FULL_NAME = "TU NOMBRE COMPLETO"
+/* ======= DATOS TUYOS ======= */
+private const val FULL_NAME = "Emilio Josue Chen Borrayo"
 private val BIRTHDAY_MONTH = Month.SEPTEMBER
-private const val BIRTHDAY_DAY = 30
+private const val BIRTHDAY_DAY = 28
+/* =========================== */
 
 // Restaurante favorito
-private const val RESTO_NAME = "Frico Grill Cayalá"
-private const val RESTO_ADDRESS = "Paseo Cayalá, Guatemala"
+private const val RESTO_NAME = "Frisco Grill Cayalá"
+private const val RESTO_ADDRESS = "Paseo Cayalá, Zona 16"
 private const val OPEN_HOURS = "12:00PM 10:00PM"
 private const val FOOD_TYPE = "Rápida / Grill"
 private const val PRICE_LEVEL = "QQ"
 
-// Play Store del botón “Descargar”
+// Botón “Descargar” → Play Store (WhatsApp de ejemplo)
 private const val TARGET_PACKAGE = "com.whatsapp"
 
-// Consulta para Google Maps (nombre + lugar)
-private const val MAPS_QUERY = "Frisco Grill Cayalá, Paseo Cayalá"
-/* =========================================== */
+// Coordenadas del restaurante (ajústalas si quieres las exactas)
+private const val RESTO_LAT = 14.6129
+private const val RESTO_LNG = -90.5069
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,20 +103,25 @@ private fun MainScreen() {
             )
 
             Spacer(Modifier.height(16.dp))
-            OutlinedButton(onClick = { /* opcional */ }, modifier = Modifier.align(Alignment.End)) {
+            OutlinedButton(onClick = { /* decorativo */ }, modifier = Modifier.align(Alignment.End)) {
                 Text("Terminar jornada")
             }
 
             Spacer(Modifier.height(16.dp))
             RestaurantCard(
-                onStart = { Toast.makeText(context, FULL_NAME, Toast.LENGTH_SHORT).show() },
-                onDetails = {
-                    val i = Intent(context, DetailsActivity::class.java)
-                        .putExtra("food", FOOD_TYPE)
-                        .putExtra("price", PRICE_LEVEL)
-                    context.startActivity(i)
+                onStart = {
+                    // Toast con tu nombre completo
+                    Toast.makeText(context, FULL_NAME, Toast.LENGTH_SHORT).show()
                 },
-                onDirections = { openMapsWithQuery(context, MAPS_QUERY) }
+                onDetails = {
+                    // “Detalles” como Toast (dos líneas)
+                    val msg = "Tipo de comida: $FOOD_TYPE\n¿Qué tan caro es?: $PRICE_LEVEL"
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                },
+                onDirections = {
+                    // Maps con pin en coordenadas
+                    openMapsWithPin(context, RESTO_LAT, RESTO_LNG, RESTO_NAME)
+                }
             )
         }
     }
@@ -157,7 +163,7 @@ private fun RestaurantCard(
     }
 }
 
-/* ================= Helpers ================= */
+/* ============== Helpers ============== */
 
 private fun birthdayForThisYear(): Pair<String, String> {
     val locale = Locale("es", "ES")
@@ -189,16 +195,13 @@ private fun openPlayStoreOrWeb(context: Context, packageName: String) {
     context.startActivity(web)
 }
 
-private fun openMapsWithQuery(context: Context, query: String) {
-    val mapsIntent = Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse("geo:0,0?q=${Uri.encode(query)}")
-    ).setPackage("com.google.android.apps.maps")
-
+private fun openMapsWithPin(context: Context, lat: Double, lng: Double, label: String) {
+    val uri = Uri.parse("geo:$lat,$lng?q=$lat,$lng(${Uri.encode(label)})")
+    val maps = Intent(Intent.ACTION_VIEW, uri).setPackage("com.google.android.apps.maps")
     try {
-        context.startActivity(mapsIntent)
+        context.startActivity(maps)
     } catch (_: ActivityNotFoundException) {
-        val web = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(query)}")
+        val web = Uri.parse("https://maps.google.com/?q=$lat,$lng")
         context.startActivity(Intent(Intent.ACTION_VIEW, web))
     }
 }
